@@ -1,8 +1,13 @@
 import React, { FormEvent, useState } from 'react'
 import signInPhoto from '../assets/keys_to_house.jpg'
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai"
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import { firebaseApp } from '../firebase';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, User } from "firebase/auth";
+import { updateDoc, serverTimestamp, FieldValue, setDoc, doc, getFirestore } from "firebase/firestore";
+import { toast } from 'react-toastify';
+
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,12 +17,34 @@ const SignUp = () => {
     password: ''
   });
   const {name, email, password} = formData;
+  const navigate = useNavigate();
+  const toastId = React.useRef(null);
+
   function onChange($event: { target: HTMLInputElement; }){
     setFormData((prevState) => ({
       ...prevState,
       [$event.target.id] : $event.target.value
     }))
   }
+
+  async function onSubmit(event: any){
+    event.preventDefault();
+    try {
+      const auth = getAuth(firebaseApp);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const currentUser: User = auth.currentUser as User;
+      updateProfile(currentUser, {displayName: name});
+      const user = userCredential.user;
+      const formDataCopy: {name: string, email: string, timestamp: FieldValue} = {name, email, timestamp:  serverTimestamp()}
+      const db = getFirestore(firebaseApp);
+
+      await setDoc(doc(db, "users", user.uid), formDataCopy);
+      navigate("/");
+    } catch (error) {
+      toast.error("Something went wrong the registration");
+    }
+  }
+
   return (
     <section>
       <h1 className='text-3xl text-center mt-6 font-bold'>Sign Up</h1>
@@ -26,7 +53,7 @@ const SignUp = () => {
           <img src={signInPhoto} alt="Keys to House" className='w-full rounded-2xl' />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
             <input className='form_input_styles mb-6' 
               placeholder='Full Name' type='name' id='name' value={name} onChange={onChange} 
             />
