@@ -1,10 +1,13 @@
 import React, { FormEvent, useState } from 'react'
 import signInPhoto from '../assets/keys_to_house.jpg'
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai"
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import { toast } from 'react-toastify';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 const SignIn = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -17,6 +20,22 @@ const SignIn = () => {
       [$event.target.id] : $event.target.value
     }))
   }
+
+  async function onSubmit($event: FormEvent){
+    $event.preventDefault();
+    try {
+      const auth = getAuth();
+      const credentials = await signInWithEmailAndPassword(auth, email, password);
+      if(credentials.user){
+        navigate("/");
+      }
+      
+    } catch (error) {
+      toast.error("Bad user credentials")
+    }
+
+  }
+
   return (
     <section>
       <h1 className='text-3xl text-center mt-6 font-bold'>Sign In</h1>
@@ -25,7 +44,7 @@ const SignIn = () => {
           <img src={signInPhoto} alt="Keys to House" className='w-full rounded-2xl' />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
             <input className='form_input_styles mb-6' 
               placeholder='Email address' type='email' id='email' value={email} onChange={onChange} 
             />

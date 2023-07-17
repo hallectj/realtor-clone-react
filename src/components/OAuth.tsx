@@ -35,7 +35,6 @@ export default function OAuth() {
 
     } catch (error) {
       toast.error("Could not authenticate with Google");
-      console.log(error);
     }
   }
 
