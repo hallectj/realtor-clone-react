@@ -3,7 +3,7 @@ import signInPhoto from '../assets/keys_to_house.jpg'
 import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai"
 import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
-import { firebaseApp } from '../firebase';
+import { auth, db, firebaseApp } from '../firebase';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, User } from "firebase/auth";
 import { updateDoc, serverTimestamp, FieldValue, setDoc, doc, getFirestore } from "firebase/firestore";
 import { toast } from 'react-toastify';
@@ -30,13 +30,12 @@ const SignUp = () => {
   async function onSubmit(event: any){
     event.preventDefault();
     try {
-      const auth = getAuth(firebaseApp);
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const currentUser: User = auth.currentUser as User;
       updateProfile(currentUser, {displayName: name});
       const user = userCredential.user;
       const formDataCopy: {name: string, email: string, timestamp: FieldValue} = {name, email, timestamp:  serverTimestamp()}
-      const db = getFirestore(firebaseApp);
 
       await setDoc(doc(db, "users", user.uid), formDataCopy);
       navigate("/");
