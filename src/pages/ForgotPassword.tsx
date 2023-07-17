@@ -2,12 +2,27 @@ import React, { FormEvent, useState } from 'react'
 import signInPhoto from '../assets/keys_to_house.jpg'
 import { Link } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import { toast } from 'react-toastify';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   function onChange($event: { target: HTMLInputElement; }){
     setEmail($event.target.value);
   }
+
+  async function onSubmit($event: FormEvent){
+    $event.preventDefault();
+
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      toast.success("Email was sent");
+    } catch (error) {
+      toast.error("Could not send reset password");
+    }
+  }
+
   return (
     <section>
       <h1 className='text-3xl text-center mt-6 font-bold'>Forgot Password</h1>
@@ -16,7 +31,7 @@ const ForgotPassword = () => {
           <img src={signInPhoto} alt="Keys to House" className='w-full rounded-2xl' />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
             <input className='form_input_styles mb-6' 
               placeholder='Email address' type='email' id='email' value={email} onChange={onChange} 
             />
